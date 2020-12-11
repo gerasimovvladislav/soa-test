@@ -1,0 +1,54 @@
+version: "3"
+
+networks:
+  soa:
+    driver: bridge
+
+services:
+  site:
+    container_name: soa-site
+    build: ./docker/site
+    ports:
+      - 8888:80
+    volumes:
+      - ./site:/app
+    links:
+      - weather_history:weather_history
+    networks:
+      - soa
+
+  weather_history:
+    container_name: soa-weather_history
+    build: ./docker/weather_history
+    ports:
+      - 8889:80
+    volumes:
+      - ./weather_history:/app
+    depends_on:
+      - db
+    links:
+      - db:db
+    networks:
+      - soa
+
+  db:
+    image: postgres:11
+    container_name: soa-db
+    environment:
+      - POSTGRES_DB=docker
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+    volumes:
+      - ./docker/db:/var/lib/postgresql/data
+    networks:
+      - soa
+
+  adminer:
+    image: adminer
+    container_name: soa-adminer
+    depends_on:
+      - db
+    ports:
+      - 8080:8080
+    networks:
+      - soa
